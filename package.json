@@ -1,0 +1,14 @@
+{
+    "name": "api-gateway-websocket-api",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.0.0"
+    },
+    "dependencies": {
+        "@exanubes/pulumi-nodejs-function": "^1.0.9",
+        "@pulumi/aws": "^6.0.0",
+        "@pulumi/awsx": "^2.0.2",
+        "@pulumi/pulumi": "^3.113.0"
+    }
+}
