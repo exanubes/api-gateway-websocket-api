@@ -94,3 +94,20 @@ disconnectLambda.grantInvoke(
     'apigateway.amazonaws.com',
     pulumi.interpolate`${api.executionArn}/${stage.name}/$disconnect`
 );
+
+const defaultLambda = new NodejsFunction('WebSocket_Default', {
+    code: new pulumi.asset.FileArchive('src/functions/ws-default'),
+    handler: 'index.handler'
+});
+
+const defaultIntegration = new aws.apigatewayv2.Integration('default-integration', {
+    apiId: api.id,
+    integrationType: 'AWS_PROXY',
+    integrationUri: defaultLambda.handler.invokeArn
+});
+
+defaultLambda.grantInvoke(
+    'apigw-default-grant-invoke',
+    'apigateway.amazonaws.com',
+    pulumi.interpolate`${api.executionArn}/${stage.name}/$default`
+);
