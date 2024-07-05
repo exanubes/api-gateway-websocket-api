@@ -166,7 +166,7 @@ new aws.apigatewayv2.Route(`Disconnect_Route`, {
     target: pulumi.interpolate`integrations/${disconnectIntegration.id}`
 });
 
-new aws.apigatewayv2.Route(`Default_Route`, {
+const defaultRoute = new aws.apigatewayv2.Route(`Default_Route`, {
     apiId: api.id,
     routeKey: '$default',
     target: pulumi.interpolate`integrations/${defaultIntegration.id}`
@@ -176,4 +176,10 @@ new aws.apigatewayv2.Route(`Message_Route`, {
     apiId: api.id,
     routeKey: 'message',
     target: pulumi.interpolate`integrations/${messageIntegration.id}`
+});
+
+new aws.apigatewayv2.RouteResponse('route-response', {
+    apiId: api.id,
+    routeId: defaultRoute.id,
+    routeResponseKey: '$default'
 });
