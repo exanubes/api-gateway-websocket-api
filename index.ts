@@ -58,3 +58,39 @@ connectLambda.grantInvoke(
     'apigateway.amazonaws.com',
     pulumi.interpolate`${api.executionArn}/${stage.name}/$connect`
 );
+
+const disconnectLambda = new NodejsFunction('WebSocket_Disconnect', {
+    code: new pulumi.asset.FileArchive('src/functions/ws-disconnect'),
+    handler: 'index.handler',
+    policy: {
+        policy: table.arn.apply((tableArn) =>
+            JSON.stringify({
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: ['dynamodb:DeleteItem'],
+                        Effect: 'Allow',
+                        Resource: tableArn
+                    }
+                ]
+            })
+        )
+    },
+    environment: {
+        variables: {
+            CONNECTIONS_TABLE: table.arn
+        }
+    }
+});
+
+const disconnectIntegration = new aws.apigatewayv2.Integration('disconnect-integration', {
+    apiId: api.id,
+    integrationType: 'AWS_PROXY',
+    integrationUri: disconnectLambda.handler.invokeArn
+});
+
+disconnectLambda.grantInvoke(
+    'apigw-disconnect-grant-invoke',
+    'apigateway.amazonaws.com',
+    pulumi.interpolate`${api.executionArn}/${stage.name}/$disconnect`
+);
