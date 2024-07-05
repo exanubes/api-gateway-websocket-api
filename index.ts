@@ -111,3 +111,45 @@ defaultLambda.grantInvoke(
     'apigateway.amazonaws.com',
     pulumi.interpolate`${api.executionArn}/${stage.name}/$default`
 );
+
+const messageLambda = new NodejsFunction('WebSocket_Message', {
+    code: new pulumi.asset.FileArchive('src/functions/ws-message'),
+    handler: 'index.handler',
+    policy: {
+        policy: pulumi.all([table.arn, api.executionArn]).apply(([tableArn, executionArn]) =>
+            JSON.stringify({
+                Version: '2012-10-17',
+                Statement: [
+                    {
+                        Action: ['dynamodb:DeleteItem', 'dynamodb:Scan'],
+                        Effect: 'Allow',
+                        Resource: tableArn
+                    },
+                    {
+                        Action: ['execute-api:ManageConnections', 'execute-api:Invoke'],
+                        Effect: 'Allow',
+                        // arn:aws:execute-api:{region}:{accountId}:{apiId}/{stage}/POST/@connections/{connectionId}
+                        Resource: [`${executionArn}/prod/POST/@connections/*`]
+                    }
+                ]
+            })
+        )
+    },
+    environment: {
+        variables: {
+            CONNECTIONS_TABLE: table.arn
+        }
+    }
+});
+
+const messageIntegration = new aws.apigatewayv2.Integration('message-integration', {
+    apiId: api.id,
+    integrationType: 'AWS_PROXY',
+    integrationUri: messageLambda.handler.invokeArn
+});
+
+messageLambda.grantInvoke(
+    'apigw-message-grant-invoke',
+    'apigateway.amazonaws.com',
+    pulumi.interpolate`${api.executionArn}/${stage.name}/message`
+);
