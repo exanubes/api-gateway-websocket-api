@@ -14,3 +14,9 @@ const api = new aws.apigatewayv2.Api('websocket-api', {
     protocolType: 'WEBSOCKET',
     routeSelectionExpression: '$request.body.type'
 });
+
+const stage = new aws.apigatewayv2.Stage(`api-dev-stage`, {
+    name: 'dev',
+    apiId: api.id,
+    autoDeploy: true
+});
