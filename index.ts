@@ -60,7 +60,7 @@ connectLambda.grantInvoke(
 );
 
 const disconnectLambda = new NodejsFunction('WebSocket_Disconnect', {
-    code: new pulumi.asset.FileArchive('src/functions/ws-disconnect'),
+    code: new pulumi.asset.FileArchive('functions/ws-disconnect'),
     handler: 'index.handler',
     policy: {
         policy: table.arn.apply((tableArn) =>
@@ -96,7 +96,7 @@ disconnectLambda.grantInvoke(
 );
 
 const defaultLambda = new NodejsFunction('WebSocket_Default', {
-    code: new pulumi.asset.FileArchive('src/functions/ws-default'),
+    code: new pulumi.asset.FileArchive('functions/ws-default'),
     handler: 'index.handler'
 });
 
@@ -113,10 +113,10 @@ defaultLambda.grantInvoke(
 );
 
 const messageLambda = new NodejsFunction('WebSocket_Message', {
-    code: new pulumi.asset.FileArchive('src/functions/ws-message'),
+    code: new pulumi.asset.FileArchive('functions/ws-message'),
     handler: 'index.handler',
     policy: {
-        policy: pulumi.all([table.arn, api.executionArn]).apply(([tableArn, executionArn]) =>
+        policy: pulumi.all([table.arn, api.executionArn, stage.name]).apply(([tableArn, executionArn, stageName]) =>
             JSON.stringify({
                 Version: '2012-10-17',
                 Statement: [
@@ -129,7 +129,7 @@ const messageLambda = new NodejsFunction('WebSocket_Message', {
                         Action: ['execute-api:ManageConnections', 'execute-api:Invoke'],
                         Effect: 'Allow',
                         // arn:aws:execute-api:{region}:{accountId}:{apiId}/{stage}/POST/@connections/{connectionId}
-                        Resource: [`${executionArn}/prod/POST/@connections/*`]
+                        Resource: [`${executionArn}/${stageName}/POST/@connections/*`]
                     }
                 ]
             })
@@ -183,3 +183,5 @@ new aws.apigatewayv2.RouteResponse('route-response', {
     routeId: defaultRoute.id,
     routeResponseKey: '$default'
 });
+
+export const ws_api_url = pulumi.interpolate`${api.apiEndpoint}/${stage.name}/`;

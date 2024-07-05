@@ -32,6 +32,7 @@ exports.handler = async function handler(event) {
                 if (error.$metadata.httpStatusCode === 410) {
                     await handleStaleConnection(table, connection.connectionId.S);
                 }
+                console.log(error);
             }
         })
     );
