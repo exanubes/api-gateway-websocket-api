@@ -153,3 +153,27 @@ messageLambda.grantInvoke(
     'apigateway.amazonaws.com',
     pulumi.interpolate`${api.executionArn}/${stage.name}/message`
 );
+
+new aws.apigatewayv2.Route(`Connect_Route`, {
+    apiId: api.id,
+    routeKey: '$connect',
+    target: pulumi.interpolate`integrations/${connectIntegration.id}`
+});
+
+new aws.apigatewayv2.Route(`Disconnect_Route`, {
+    apiId: api.id,
+    routeKey: '$disconnect',
+    target: pulumi.interpolate`integrations/${disconnectIntegration.id}`
+});
+
+new aws.apigatewayv2.Route(`Default_Route`, {
+    apiId: api.id,
+    routeKey: '$default',
+    target: pulumi.interpolate`integrations/${defaultIntegration.id}`
+});
+
+new aws.apigatewayv2.Route(`Message_Route`, {
+    apiId: api.id,
+    routeKey: 'message',
+    target: pulumi.interpolate`integrations/${messageIntegration.id}`
+});
